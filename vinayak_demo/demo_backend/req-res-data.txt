@@ -1,0 +1,9 @@
+inception/mercury-2: 4.50
+inception/mercury-2: 3.99
+inception/mercury-2: 3.18
+inception/mercury-2: 5.69
+inception/mercury-2: 3.11
+inception/mercury-2: 11.09
+inception/mercury-2: 3.64
+inception/mercury-2: 7.36
+inception/mercury-2: 3.48

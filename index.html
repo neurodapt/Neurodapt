@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memory AI — Intelligent Study Simplifier</title>
+    <meta
+      name="description"
+      content="Sleek AI-powered study assistant that highlights complex jargon and simplifies text in-place for faster learning and retention."
+    />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- FontAwesome Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- PDF.js CDN for PDF Upload Parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Mammoth.js CDN for DOCX Upload Parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- App Container -->
+    <div class="app-container">
+      <!-- LEFT SIDEBAR -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="brand">
+            <div class="brand-icon">
+              <i class="fa-solid fa-brain-circuit"></i>
+            </div>
+            <div class="brand-text">
+              <span class="brand-name"
+                >Memory <span class="brand-highlight">AI</span></span
+              >
+              <span class="brand-tagline">Study Simplifier</span>
+            </div>
+          </div>
+          <button
+            class="icon-btn mobile-close-btn"
+            id="closeSidebarBtn"
+            title="Close Sidebar"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="sidebar-actions">
+          <button class="btn btn-primary" id="btnNewSession">
+            <i class="fa-solid fa-plus"></i> New Session
+          </button>
+          <button class="btn btn-glass" id="btnSidebarUpload">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Upload Document
+          </button>
+        </div>
+
+        <div class="formats-badge-container">
+          <span class="badge-label">Supported Formats:</span>
+          <div class="badges">
+            <span class="badge badge-pdf"
+              ><i class="fa-solid fa-file-pdf"></i> PDF</span
+            >
+            <span class="badge badge-docx"
+              ><i class="fa-solid fa-file-word"></i> DOCX</span
+            >
+            <span class="badge badge-txt"
+              ><i class="fa-solid fa-file-lines"></i> TXT</span
+            >
+          </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- Preset Documents & History -->
+        <div class="sessions-section">
+          <div class="section-title">
+            <span>Sample Study Sets</span>
+          </div>
+          <ul class="session-list" id="sessionList">
+            <li class="session-item active" data-preset="biology">
+              <div class="session-info">
+                <span class="session-name">Neuroscience & Mitochondria</span>
+                <span class="session-meta">Biology • 248 words</span>
+              </div>
+            </li>
+            <li class="session-item" data-preset="quantum">
+              <div class="session-info">
+                <span class="session-name">Quantum Superposition</span>
+                <span class="session-meta">Physics • 195 words</span>
+              </div>
+            </li>
+            <li class="session-item" data-preset="economics">
+              <div class="session-info">
+                <span class="session-name">Macroeconomics & Inflation</span>
+                <span class="session-meta">Finance • 210 words</span>
+              </div>
+            </li>
+            <li class="session-item" data-preset="law">
+              <div class="session-info">
+                <span class="session-name">Constitutional Jurisprudence</span>
+                <span class="session-meta">Law • 232 words</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="sidebar-footer">
+          <button class="icon-btn" id="btnSettings" title="Settings">
+            <i class="fa-solid fa-gear"></i>
+          </button>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT AREA -->
+      <main class="main-content">
+        <!-- TOP HEADER / CONTROL BAR -->
+        <header class="top-header">
+          <div class="header-left">
+            <button
+              class="icon-btn mobile-menu-btn"
+              id="mobileMenuBtn"
+              title="Toggle Menu"
+            >
+              <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="doc-title-wrapper">
+              <h1
+                class="doc-title"
+                id="docTitle"
+                contenteditable="true"
+                spellcheck="false"
+                title="Click to rename"
+              >
+                Cellular Energy & Neural Transmission
+              </h1>
+              <i class="fa-solid fa-pen doc-edit-icon"></i>
+            </div>
+          </div>
+
+          <!-- Top Stats (Hard Words, Simplified, Memory Score) -->
+          <div class="top-stats-container">
+            <div class="top-stat-pill stat-red" title="Hard words identified">
+              <i class="fa-solid fa-circle-exclamation"></i>
+              <span>Hard Words: <strong id="statHardWords">0</strong></span>
+            </div>
+
+            <div class="top-stat-pill stat-green" title="Words simplified">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Simplified: <strong id="statSimplified">0</strong></span>
+            </div>
+
+            <div
+              class="top-stat-pill stat-score"
+              title="Estimated Memory Score"
+            >
+              <i class="fa-solid fa-brain"></i>
+              <span
+                >Memory Score: <strong id="statMemoryScore">72%</strong></span
+              >
+              <div class="mini-score-bar">
+                <div
+                  class="mini-score-fill"
+                  id="scoreBarFill"
+                  style="width: 72%"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Header Right Actions -->
+          <div class="header-right">
+            <button
+              class="btn btn-glass"
+              id="btnHeaderPaste"
+              title="Paste raw text content"
+            >
+              <i class="fa-solid fa-paste"></i>
+              <span class="btn-text">Paste Text</span>
+            </button>
+            <button class="btn btn-primary" id="btnHeaderUpload">
+              <i class="fa-solid fa-upload"></i>
+              <span class="btn-text">Upload</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- VIEWPORT CENTER: DOCUMENT VIEWER & SIDE-BY-SIDE PANES -->
+        <div class="viewer-container">
+          <!-- DROPZONE FOR FILES -->
+          <div class="dropzone-overlay" id="dropzoneOverlay">
+            <div class="dropzone-box">
+              <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+              <h3>Drop your study document here</h3>
+              <p>Supports .PDF, .DOCX, and .TXT files</p>
+            </div>
+          </div>
+
+          <!-- 1. SINGLE VIEW (DEFAULT) -->
+          <div class="document-viewer glass-card" id="singleViewer">
+            <div class="viewer-header">
+              <div class="viewer-meta">
+                <span class="meta-pill" id="viewModePill">
+                  <i class="fa-solid fa-eye"></i> Original Mode
+                </span>
+                <span class="meta-pill status-pill" id="rewriteStatusPill">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> 14 Hard Words
+                  Detected
+                </span>
+              </div>
+              <div class="viewer-quick-tools">
+                <button
+                  class="icon-btn-sm"
+                  id="btnIncreaseFont"
+                  title="Increase Font Size"
+                >
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+                <button
+                  class="icon-btn-sm"
+                  id="btnDecreaseFont"
+                  title="Decrease Font Size"
+                >
+                  <i class="fa-solid fa-minus"></i>
+                </button>
+                <button
+                  class="icon-btn-sm"
+                  id="btnFullscreen"
+                  title="Toggle Fullscreen"
+                >
+                  <i class="fa-solid fa-expand"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="text-content" id="textContent" tabindex="0">
+              <!-- Rendered document text will be injected dynamically by JS -->
+            </div>
+          </div>
+
+          <!-- 2. SIDE-BY-SIDE COMPARE VIEW (HIDDEN BY DEFAULT) -->
+          <div class="compare-container hidden" id="compareViewer">
+            <!-- Left Pane: Original -->
+            <div class="compare-pane glass-card" id="originalPaneWrapper">
+              <div class="pane-header red-header">
+                <span class="pane-title"
+                  ><i class="fa-solid fa-circle-dot"></i> Original Text
+                  (Highlighted Jargon)</span
+                >
+                <span class="pane-badge" id="origWordCount">Original</span>
+              </div>
+              <div
+                class="compare-content text-content"
+                id="originalPaneContent"
+              >
+                <!-- Rendered original text -->
+              </div>
+            </div>
+
+            <!-- Right Pane: Simplified -->
+            <div class="compare-pane glass-card" id="simplifiedPaneWrapper">
+              <div class="pane-header green-header">
+                <span class="pane-title"
+                  ><i class="fa-solid fa-wand-magic-sparkles"></i> Simplified
+                  Text (AI Rewritten)</span
+                >
+                <span class="pane-badge green-badge">Simplified</span>
+              </div>
+              <div
+                class="compare-content text-content"
+                id="simplifiedPaneContent"
+              >
+                <!-- Rendered simplified text -->
+              </div>
+            </div>
+          </div>
+
+          <!-- FLOATING SELECTION TOOLBAR -->
+          <div class="floating-toolbar hidden" id="floatingToolbar">
+            <button class="ft-btn" id="ftExplain">
+              <i class="fa-solid fa-circle-info"></i> Explain
+            </button>
+            <button class="ft-btn" id="ftRewrite">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Rewrite
+            </button>
+            <button class="ft-btn" id="ftMnemonic">
+              <i class="fa-solid fa-lightbulb"></i> Mnemonic
+            </button>
+            <button class="ft-btn" id="ftSummarize">
+              <i class="fa-solid fa-align-left"></i> Summarize
+            </button>
+            <button class="ft-btn" id="ftCopy">
+              <i class="fa-solid fa-copy"></i> Copy
+            </button>
+            <div class="ft-arrow"></div>
+          </div>
+
+          <!-- HOVER TOOLTIP FOR HARD WORDS -->
+          <div class="hard-word-tooltip hidden" id="wordTooltip">
+            <span class="tooltip-badge">AI Insight</span>
+            <span class="tooltip-text">Can be simplified</span>
+          </div>
+        </div>
+
+          <!-- LIVE PIPELINE STATUS -->
+          <section class="pipeline-status-area glass-card" id="pipelineStatusArea" aria-live="polite" aria-atomic="true">
+            <div class="pipeline-status-step" id="pipelineStep1" data-state="idle">
+              <span class="pipeline-status-icon"><i class="fa-solid fa-circle"></i></span>
+              <span class="pipeline-status-text">Clause Segmentation</span>
+            </div>
+            <div class="pipeline-status-step" id="pipelineStep2" data-state="idle">
+              <span class="pipeline-status-icon"><i class="fa-solid fa-circle"></i></span>
+              <span class="pipeline-status-text">Find Hard Words</span>
+            </div>
+            <div class="pipeline-status-step" id="pipelineStep3" data-state="idle">
+              <span class="pipeline-status-icon"><i class="fa-solid fa-circle"></i></span>
+              <span class="pipeline-status-text">Generate Simplified Rewrite</span>
+            </div>
+            <div class="pipeline-status-step" id="pipelineStep4" data-state="idle">
+              <span class="pipeline-status-icon"><i class="fa-solid fa-circle"></i></span>
+              <span class="pipeline-status-text">Analyze Rewritten Text</span>
+            </div>
+          </section>
+
+        <!-- BOTTOM CONTROL BAR -->
+        <section class="bottom-control-bar standalone-rewrite">
+          <button class="btn btn-action-rewrite" id="btnRewrite">
+            <i class="fa-solid fa-wand-magic-sparkles magic-sparkle-icon"></i>
+            <span>Rewrite Hard Words</span>
+            <div class="btn-glow-effect"></div>
+          </button>
+        </section>
+
+        <!-- BOTTOM PROMPT INPUT AREA -->
+        <div class="prompt-input-container">
+          <form class="chat-input-form" id="chatForm">
+            <div class="input-wrapper">
+              <i class="fa-solid fa-sparkles prompt-icon"></i>
+              <textarea
+                id="chatInput"
+                placeholder="Ask Memory AI to explain, summarize, or generate flashcards..."
+                rows="1"
+              ></textarea>
+              <button
+                type="submit"
+                class="send-btn"
+                id="btnSendChat"
+                title="Send prompt"
+              >
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+
+    <!-- HIDDEN FILE INPUT -->
+    <input type="file" id="fileInput" accept=".pdf,.docx,.txt" hidden />
+
+    <!-- MODALS -->
+
+    <!-- PASTE TEXT MODAL -->
+    <div class="modal-overlay hidden" id="pasteModal">
+      <div class="modal-box glass-card">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-paste"></i> Paste Document Text</h3>
+          <button class="icon-btn modal-close" id="closePasteModal">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <textarea
+            id="pasteTextarea"
+            placeholder="Paste your study material, lecture notes, textbook excerpts here..."
+          ></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-glass" id="cancelPasteBtn">Cancel</button>
+          <button class="btn btn-primary" id="confirmPasteBtn">
+            Load Document
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div class="modal-overlay hidden" id="settingsModal">
+      <div class="modal-box glass-card">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-sliders"></i> Memory AI Preferences</h3>
+          <button class="icon-btn modal-close" id="closeSettingsModal">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="setting-group">
+            <label for="sensitivitySelect">Hard Word Sensitivity</label>
+            <select id="sensitivitySelect" class="form-control">
+              <option value="high">
+                High (Highlight more technical words)
+              </option>
+              <option value="medium" selected>
+                Balanced (Standard academic terms)
+              </option>
+              <option value="low">
+                Conservative (Only extremely complex jargon)
+              </option>
+            </select>
+          </div>
+          <div class="setting-group">
+            <label for="apiBaseUrlInput">OpenAI-Compatible Base URL</label>
+            <input
+              type="url"
+              id="apiBaseUrlInput"
+              class="form-control"
+              placeholder="https://api.aicredits.in/v1"
+            />
+          </div>
+          <div class="setting-group">
+            <label for="apiModelInput">Model</label>
+            <input
+              type="text"
+              id="apiModelInput"
+              class="form-control"
+              placeholder="openai/gpt-5-nano"
+            />
+          </div>
+          <div class="setting-group">
+            <label for="apiKeyInput">API Key</label>
+            <input
+              type="password"
+              id="apiKeyInput"
+              class="form-control"
+              placeholder="sk-..."
+              autocomplete="off"
+            />
+            <small class="setting-hint">Only needed for local direct mode; Vercel uses the server-side key.</small>
+          </div>
+          <div class="setting-group">
+            <label for="animSpeedSelect">Rewrite Animation Speed</label>
+            <select id="animSpeedSelect" class="form-control">
+              <option value="fast">Fast (300ms)</option>
+              <option value="normal" selected>Normal Staggered (600ms)</option>
+              <option value="slow">Slow Motion (1.2s)</option>
+            </select>
+          </div>
+          <div class="setting-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="chkAutoChat" checked />
+              <span>Automatically explain rewritten terms in AI chat</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" id="saveSettingsBtn">
+            Save Preferences
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLASHCARDS MODAL -->
+    <div class="modal-overlay hidden" id="flashcardsModal">
+      <div class="modal-box glass-card modal-lg">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-layer-group"></i> Study Flashcards</h3>
+          <button class="icon-btn modal-close" id="closeFlashcardsModal">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body flashcard-body">
+          <div class="flashcard-card" id="flashcardElement">
+            <div class="flashcard-inner">
+              <div class="flashcard-front">
+                <span class="card-side-label">QUESTION</span>
+                <p class="card-text" id="fcQuestion">
+                  What is the primary role of the mitochondria in cellular
+                  biology?
+                </p>
+                <span class="flip-hint"
+                  ><i class="fa-solid fa-rotate"></i> Click card to reveal
+                  answer</span
+                >
+              </div>
+              <div class="flashcard-back">
+                <span class="card-side-label">ANSWER</span>
+                <p class="card-text" id="fcAnswer">
+                  The mitochondria acts as the power station of the cell,
+                  converting oxygen and nutrients into ATP energy through
+                  cellular respiration.
+                </p>
+                <span class="flip-hint"
+                  ><i class="fa-solid fa-rotate"></i> Click card to see
+                  question</span
+                >
+              </div>
+            </div>
+          </div>
+          <div class="flashcard-controls">
+            <button class="btn btn-glass" id="btnFcPrev">
+              <i class="fa-solid fa-chevron-left"></i> Previous
+            </button>
+            <span class="fc-counter" id="fcCounter">1 / 5</span>
+            <button class="btn btn-glass" id="btnFcNext">
+              Next <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUIZ DRAWER / MODAL -->
+    <div class="modal-overlay hidden" id="quizModal">
+      <div class="modal-box glass-card modal-lg">
+        <div class="modal-header">
+          <h3>
+            <i class="fa-solid fa-graduation-cap"></i> Interactive Practice Quiz
+          </h3>
+          <button class="icon-btn modal-close" id="closeQuizModal">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body quiz-body">
+          <div class="quiz-progress-bar">
+            <div
+              class="quiz-progress-fill"
+              id="quizProgressFill"
+              style="width: 20%"
+            ></div>
+          </div>
+          <div class="quiz-question-box">
+            <span class="quiz-q-num" id="quizQNum">Question 1 of 5</span>
+            <h4 class="quiz-q-title" id="quizQTitle">
+              Which molecule provides the immediate chemical energy used by
+              cellular functions?
+            </h4>
+            <div class="quiz-options" id="quizOptions">
+              <!-- Dynamically populated choices -->
+            </div>
+          </div>
+          <div class="quiz-feedback hidden" id="quizFeedback">
+            <!-- Instant correct/incorrect feedback -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-glass hidden" id="btnQuizPrev">
+            <i class="fa-solid fa-chevron-left"></i> Prev
+          </button>
+          <button class="btn btn-primary" id="btnQuizNext">
+            Submit Answer <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div class="toast hidden" id="toast">
+      <i class="fa-solid fa-circle-check toast-icon"></i>
+      <span class="toast-message" id="toastMessage"
+        >Action completed successfully!</span
+      >
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
